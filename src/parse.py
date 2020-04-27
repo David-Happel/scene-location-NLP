@@ -31,6 +31,7 @@ for season_name in os.listdir(input_dir):
 
         with open(episode_output_path, 'w', newline='') as csvfile:
             file_writer = csv.writer(csvfile, delimiter='|')
+            file_writer.writerow(["location", "character", "line"])
             location = ''
             character = ''
             scentence = ''

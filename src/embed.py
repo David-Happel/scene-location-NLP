@@ -19,7 +19,10 @@ data_dir = os.path.join(directory_path, "data/parsed_transcripts")
 pickle_out_dir = os.path.join(directory_path, "data/embeddings")
 
 def read_data():
-    return pd.read_csv(data_dir+'/season01/0101.csv', '|')
+    res = pd.DataFrame([])
+    for filename in os.listdir(data_dir+'/season01')[0:5]:
+        res = res.append(pd.read_csv(data_dir+'/season01/'+filename, '|'), ignore_index=True)
+    return res
 
 data = read_data()
 

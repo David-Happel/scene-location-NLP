@@ -1,4 +1,5 @@
 /env
 /.vscode
 test.py
-/data
+/data/parsed_transcripts
+/data/embeddings

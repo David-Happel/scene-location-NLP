@@ -17,8 +17,6 @@ def read_data():
 
 data = read_data()
 
-# fig, ax = plt.subplots(figsize=(15,7))
-
 plot = data.groupby('location').count().plot(kind='bar')
 plot2 = data.groupby('character').count().plot(kind='bar')
 plt.show()

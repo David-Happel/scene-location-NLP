@@ -39,14 +39,14 @@ for season_name in os.listdir(input_dir):
 
             for line in text:
                 line = re.sub('\n', ' ', line).lower()
-                line = re.sub('[^a-zA-Z0-9 \n\.:\[\]\,]', '', line)
-                location_line = re.search('\[scene: (.*?)[,.](.*)', line)
+                line = re.sub('[^a-zA-Z0-9 \n\.:\[\]\,;]', '', line)
+                location_line = re.search('\[scene[:,.;] (.*?)[,.;\]](.*)', line)
                 if location_line:
                     location = location_line.group(1)
                 elif location:
                     voice_line = re.search('(.*?): (.*)', line)
                     if voice_line:
-                        if character:
+                        if character and scentence:
                             csv_line = [location, character, scentence]
                             file_writer.writerow(csv_line)
                             character, scentence = "", ""
@@ -54,8 +54,11 @@ for season_name in os.listdir(input_dir):
                         scentence = voice_line.group(2)
                     elif(line == 'end'):
                         break
-                    else:
+                    elif(re.match('[^\[\]]+$', line)):
                         scentence += " " + line
+                    
+                        
+                            
 
 
 

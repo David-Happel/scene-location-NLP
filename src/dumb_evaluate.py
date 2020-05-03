@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.metrics import f1_score
 from sklearn.metrics import confusion_matrix
+from sklearn.metrics import accuracy_score
 
 script_path = os.path.abspath(__file__)  # path to python script
 directory_path = os.path.dirname(os.path.split(script_path)[0])  # path to python script dir
@@ -29,6 +30,9 @@ for line in test_data['clean_line']:
     else:
         test_preds.append(locations[0])
 
+# print(list(zip(
+# test_data['location'],test_preds)))
 print(f1_score(test_data['location'], test_preds, average='weighted'))
+print(accuracy_score(test_data['location'], test_preds))
 print(confusion_matrix(test_data['location'], test_preds))
-plt.show()
+# plt.show()

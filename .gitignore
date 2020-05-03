@@ -3,4 +3,5 @@
 test.py
 data/parsed_transcripts
 data/embeddings
+data/word_counts
 

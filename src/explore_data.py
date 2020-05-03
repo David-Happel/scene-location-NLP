@@ -18,5 +18,5 @@ def read_data():
 data = read_data()
 
 plot = data.groupby('location').count().plot(kind='bar')
-plot2 = data.groupby('character').count().plot(kind='bar')
+# plot2 = data.groupby('character').count().plot(kind='bar')
 plt.show()

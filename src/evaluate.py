@@ -2,9 +2,12 @@
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import f1_score
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import plot_confusion_matrix
 import os
 import pickle
 import pandas as pd
+import matplotlib.pyplot as plt
+
 
 script_path = os.path.abspath(__file__)  # path to python script
 directory_path = os.path.dirname(os.path.split(script_path)[0])  # path to python script dir
@@ -33,4 +36,7 @@ lreg = LogisticRegression(max_iter=1000)
 lreg.fit(xtrain, ytrain)
 
 preds_valid = lreg.predict(xvalid)
+
 print(f1_score(yvalid, preds_valid, average='weighted'))
+plot_confusion_matrix(lreg, xvalid, yvalid)
+plt.show()

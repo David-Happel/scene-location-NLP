@@ -43,8 +43,6 @@ def lemmatization(texts):
     return output
 
 data['clean_line'] = lemmatization(data['clean_line'])
-# print(data.sample(10))
-
 
 def get_vectors(scentences):
     elmo = hub.Module("https://tfhub.dev/google/elmo/3", trainable=True)

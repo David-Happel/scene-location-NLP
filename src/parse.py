@@ -3,12 +3,19 @@ import re
 import os
 import csv
 import codecs
+import textdistance
 
 
 script_path = os.path.abspath(__file__)  # path to python script
 directory_path = os.path.dirname(os.path.split(script_path)[0])  # path to python script dir
 input_dir = os.path.join(directory_path, "data/transcripts")  # path to transcripts dir
 output_dir = os.path.join(directory_path, "data/parsed_transcripts")
+
+def locations_same(a, b):
+    return textdistance.levenshtein.normalized_similarity(a, b) > 0.7
+
+allowed_locations = ['central perk', 'monica and rachels']
+
 
 for season_name in os.listdir(input_dir):
     season_path = os.path.join(input_dir, season_name)  # path to season dir
@@ -19,9 +26,6 @@ for season_name in os.listdir(input_dir):
     for filename in os.listdir(season_path):  # for each episode in season
         episode_path = os.path.join(season_path, filename)  # path to episode
         episode_output_path =  os.path.join(season_output_path, os.path.splitext(filename)[0] + '.csv')
-
-        if episode_path == "/home/david/Projects/NLP-project/data/transcripts/season01/0117.html":
-            print('episode_path')
 
         episode_file = file = codecs.open(episode_path, "r", "latin-1")
 
@@ -47,8 +51,11 @@ for season_name in os.listdir(input_dir):
                     voice_line = re.search('(.*?): (.*)', line)
                     if voice_line:
                         if character and scentence:
-                            csv_line = [location, character, scentence]
-                            file_writer.writerow(csv_line)
+                            for loc in allowed_locations:
+                                if locations_same(loc, location):
+                                    csv_line = [loc, character, scentence]
+                                    file_writer.writerow(csv_line)
+                                    break
                             character, scentence = "", ""
                         character = voice_line.group(1)
                         scentence = voice_line.group(2)

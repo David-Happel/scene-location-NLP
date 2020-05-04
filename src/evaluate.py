@@ -3,6 +3,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import f1_score
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import plot_confusion_matrix
+from sklearn.metrics import accuracy_score
 import os
 import pickle
 import pandas as pd
@@ -22,7 +23,6 @@ def read_data():
 
 data = read_data()
 
-
 # load elmo_train_new
 pickle_in = open(pickle_in_dir+"/elmo_data_03032019.pickle","rb")
 elmo_train_new = pickle.load(pickle_in)
@@ -38,5 +38,6 @@ lreg.fit(xtrain, ytrain)
 preds_valid = lreg.predict(xvalid)
 
 print(f1_score(yvalid, preds_valid, average='weighted'))
+print(accuracy_score(yvalid, preds_valid))
 plot_confusion_matrix(lreg, xvalid, yvalid)
 plt.show()

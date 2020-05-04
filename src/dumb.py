@@ -5,6 +5,7 @@ import spacy
 from sklearn.metrics import f1_score
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
+from clean_data import clean_data
 
 script_path = os.path.abspath(__file__)  # path to python script
 directory_path = os.path.dirname(os.path.split(script_path)[0])  # path to python script dir
@@ -24,28 +25,14 @@ def read_data():
 
 data = read_data()
 
-punctuation = '!"#$%&()*+-/:;<=>?@[\\]^_`\'{|}~.,'
-data['clean_line'] = data['line'].apply(lambda x: ''.join(ch for ch in x if ch not in set(punctuation)))
-data['clean_line'] = data['clean_line'].str.replace("[0-9]", " ")
-data['clean_line'] = data['clean_line'].apply(lambda x:' '.join(x.split()))
-
-# import spaCy's language model
-nlp = spacy.load('en', disable=['parser', 'ner'])
-# function to lemmatize text
-def lemmatization(texts):
-    output = []
-    for i in texts:
-        s = [token.lemma_ for token in nlp(i)]
-        output.append(' '.join(s))
-    return output
-
-data['clean_line'] = lemmatization(data['clean_line'])
-data['clean_line'] = data['clean_line'].str.replace("-PRON-", "")
+print('cleaning..')
+data = clean_data(data)
 
 data = data.drop(['line', 'character'], axis=1)
 
 data, test = train_test_split(data, test_size=0.2)
 
+print('counting words..')
 grouped_data = data.groupby('location')
 locations = list(grouped_data.groups.keys())
 
@@ -79,16 +66,9 @@ def calc_offset(counts):
     else:
         return counts[1]/counts[0]
 
-counts['offset_central'] = (counts[locations[0]] / counts[locations[1]]) - 1
-counts['offset_appartment'] = (counts[locations[1]] / counts[locations[0]]) - 1
-# max_value = counts['offset'].max()
-# min_value = counts['offset'].min()
-# counts['offset'] = (counts['offset'] - min_value) / (max_value - min_value)
+print('calculating offset..')
 counts['offset'] = counts.apply(calc_offset, axis=1)
 
-
-# counts[['offset_central']].sort_values(by=['offset_central']).head(30).plot(kind='bar', title='offset_central')
-# counts[['offset_appartment']].sort_values(by=['offset_appartment']).head(30).plot(kind='bar', title='offset_appartment')
 counts[['offset']].sort_values(by=['offset']).head(30).plot(kind='bar', title='offset_central')
 counts[['offset']].sort_values(by=['offset'], ascending=False).head(30).plot(kind='bar', title='offset_appartment')
 

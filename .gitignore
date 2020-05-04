@@ -1,5 +1,6 @@
 /env
 /.vscode
+.idea
 test.py
 data/parsed_transcripts
 data/embeddings

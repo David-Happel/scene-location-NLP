@@ -1,9 +1,6 @@
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
-import spacy
-from sklearn.metrics import f1_score
-from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from clean_data import clean_data
 

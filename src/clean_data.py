@@ -1,5 +1,6 @@
 import spacy
 
+
 def clean_data(data, remove_punctuation=True, remove_numbers=True, lemmatize=True, remove_pron=True):
     if remove_punctuation:
         punctuation = '!"#$%&()*+-/:;<=>?@[\\]^_`\'{|}~.,'
@@ -15,8 +16,9 @@ def clean_data(data, remove_punctuation=True, remove_numbers=True, lemmatize=Tru
         if remove_pron:
             data['clean_line'] = data['clean_line'].str.replace("-PRON-", "")
 
-    data['clean_line'] = data['clean_line'].apply(lambda x:' '.join(x.split()))
+    data['clean_line'] = data['clean_line'].apply(lambda x: ' '.join(x.split()))
     return data
+
 
 # function to lemmatize text
 def lemmatization(texts, nlp):

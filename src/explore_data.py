@@ -1,7 +1,8 @@
 
-import pandas as pd
 import os
+
 import matplotlib.pyplot as plt
+import pandas as pd
 
 script_path = os.path.abspath(__file__)  # path to python script
 directory_path = os.path.dirname(os.path.split(script_path)[0])  # path to python script dir

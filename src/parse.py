@@ -1,10 +1,10 @@
-from bs4 import BeautifulSoup
-import re
-import os
-import csv
 import codecs
-import textdistance
+import csv
+import os
+import re
 
+import textdistance
+from bs4 import BeautifulSoup
 
 script_path = os.path.abspath(__file__)  # path to python script
 directory_path = os.path.dirname(os.path.split(script_path)[0])  # path to python script dir
@@ -44,6 +44,7 @@ for season_name in os.listdir(input_dir):
             for line in text:
                 line = re.sub('\n', ' ', line).lower()
                 line = re.sub('[^a-zA-Z0-9 \n\.:\[\]\,;]', '', line)
+                line = re.sub('\.\.+', '', line)
                 location_line = re.search('\[scene[:,.;] (.*?)[,.;\]](.*)', line)
                 if location_line:
                     location = location_line.group(1)

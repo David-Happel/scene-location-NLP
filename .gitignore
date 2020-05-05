@@ -3,6 +3,7 @@
 .idea
 test.py
 data/parsed_transcripts
+parsed_transcripts.csv
 data/embeddings
 data/word_counts
 _pycashe

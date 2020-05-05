@@ -1,10 +1,11 @@
 import spacy
 
 
-def clean_data(data, remove_punctuation=True, remove_numbers=True, lemmatize=True, remove_pron=True):
+def clean_data(data, remove_punctuation=True, remove_numbers=True, lemmatize=True, remove_pron=True, minimum_words=3):
     if remove_punctuation:
         punctuation = '!"#$%&()*+-/:;<=>?@[\\]^_`\'{|}~.,'
         data['clean_line'] = data['line'].apply(lambda x: ''.join(ch for ch in x if ch not in set(punctuation)))
+
     if remove_numbers:
         data['clean_line'] = data['clean_line'].str.replace("[0-9]", " ")
 
@@ -17,6 +18,8 @@ def clean_data(data, remove_punctuation=True, remove_numbers=True, lemmatize=Tru
             data['clean_line'] = data['clean_line'].str.replace("-PRON-", "")
 
     data['clean_line'] = data['clean_line'].apply(lambda x: ' '.join(x.split()))
+    data = data[data['clean_line'].str.count(' ') >= (minimum_words-1)]
+
     return data
 
 

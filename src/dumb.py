@@ -3,24 +3,20 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from clean_data import clean_data
+from read_data import read_data
 
 script_path = os.path.abspath(__file__)  # path to python script
 directory_path = os.path.dirname(os.path.split(script_path)[0])  # path to python script dir
 data_dir = os.path.join(directory_path, "data/parsed_transcripts")
 pickle_out_dir = os.path.join(directory_path, "data/embeddings")
 
-def read_data():
-    res = pd.DataFrame([])
-    for season_name in os.listdir(data_dir):
-        print("--"+season_name)
-        season_path = os.path.join(data_dir, season_name)
-        for filename in os.listdir(season_path):
-            episode_path = os.path.join(season_path, filename)
-            print(episode_path)
-            res = res.append(pd.read_csv(episode_path, '|'), ignore_index=True)
-    return res
 
-data = read_data()
+data = pd.DataFrame()
+def process(chunk):
+    global data
+    data = data.append(chunk)
+
+read_data(process)
 
 print('cleaning..')
 data = clean_data(data)

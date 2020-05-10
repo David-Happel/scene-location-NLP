@@ -26,7 +26,7 @@ except getopt.error as err:
     sys.exit(2)
 
 NROWS = 1000
-CHUNKSIZE = 200
+CHUNKSIZE = 50
 
 # Evaluate given options
 for current_argument, current_value in arguments:
@@ -42,23 +42,25 @@ t.start()
 
 tf.disable_eager_execution()
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
+# tf.debugging.set_log_device_placement(True)
 
 script_path = os.path.abspath(__file__)  # path to python script
 directory_path = os.path.dirname(os.path.split(script_path)[0])  # path to python script dir
-data_dir = os.path.join(directory_path, "data/parsed_transcripts")
-pickle_out_dir = os.path.join(directory_path, "data/embeddings")
+pickle_out_dir = os.path.join(directory_path, "data")
 
 chunk_n = 0
 embedded_data = None
 
 def get_vectors(scentences):
     elmo = hub.Module("https://tfhub.dev/google/elmo/3", trainable=True)
+    gpu_options = tf.GPUOptions(allow_growth=True)
     embeddings = elmo(
         scentences,
         signature="default",
         as_dict=True)["elmo"]
 
-    with tf.Session() as sess:
+    with tf.Session(config = tf.ConfigProto(gpu_options=gpu_options)) as sess:
         sess.run(tf.global_variables_initializer())
         sess.run(tf.tables_initializer())
         # return average of ELMo features

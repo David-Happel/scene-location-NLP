@@ -6,11 +6,11 @@ import numpy as np
 import pandas as pd
 import textdistance
 from bs4 import BeautifulSoup
+from sklearn.model_selection import train_test_split
 
 script_path = os.path.abspath(__file__)  # path to python script
 directory_path = os.path.dirname(os.path.split(script_path)[0])  # path to python script dir
 input_dir = os.path.join(directory_path, "data/transcripts")  # path to transcripts dir
-output_path = os.path.join(directory_path, "data/parsed_transcripts.csv")
 
 def locations_same(a, b):
     return textdistance.levenshtein.normalized_similarity(a, b) > 0.7
@@ -61,10 +61,11 @@ data = pd.DataFrame(data, columns=['episode','location', 'character', 'line'])
 data["line"] = data["line"].str.split("\. ")
 data = data.explode("line").sample(frac=1).reset_index(drop=True)
 data = data.replace('', np.nan).dropna()
-data.to_csv(output_path)
 
+train, valid = train_test_split(data, test_size=0.2)
 
+train_path = os.path.join(directory_path, "data/parsed_transcripts.csv")
+validation_path = os.path.join(directory_path, 'data/validation_transcripts.csv')
 
-
-
-
+train.to_csv(train_path)
+valid.to_csv(validation_path)

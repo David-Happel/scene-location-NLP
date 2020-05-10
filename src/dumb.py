@@ -47,7 +47,7 @@ for location in locations:
         location_counts[word] = location_counts[word] / total
     location_counts = pd.DataFrame.from_dict(location_counts, orient='index', columns=[location])
     location_counts = location_counts.sort_values(by=[location], ascending=False)
-    location_counts.head(30).plot(kind='bar', title=location)
+    # location_counts.head(30).plot(kind='bar', title=location)
     counts[location] = location_counts
 
 counts = pd.concat(counts, join='outer', axis=1).fillna(0)
@@ -62,8 +62,8 @@ def calc_offset(counts):
 print('calculating offset..')
 counts['offset'] = counts.apply(calc_offset, axis=1)
 
-counts[['offset']].sort_values(by=['offset']).head(30).plot(kind='bar', title='offset_central')
-counts[['offset']].sort_values(by=['offset'], ascending=False).head(30).plot(kind='bar', title='offset_appartment')
+# counts[['offset']].sort_values(by=['offset']).head(30).plot(kind='bar', title='offset_central')
+# counts[['offset']].sort_values(by=['offset'], ascending=False).head(30).plot(kind='bar', title='offset_appartment')
 
 pickle_file = os.path.join(directory_path, "data/word_counts/word_counts.pkl")
 counts.to_pickle(pickle_file)

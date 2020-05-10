@@ -31,7 +31,7 @@ except getopt.error as err:
     print (str(err))
     sys.exit(2)
 
-NROWS = 1000
+NROWS = None
 BATCH_SIZE = 50
 EPOCHS = 5
 
@@ -57,6 +57,8 @@ scentences = ["the cat is on the mat", "what are you doing in evening"]
 script_path = os.path.abspath(__file__)  # path to python script
 directory_path = os.path.dirname(os.path.split(script_path)[0])  # path to python script dir
 data_path = os.path.join(directory_path, "data/parsed_transcripts.csv")
+model_weights_path = os.path.join(directory_path, './model_elmo_weights.h5')
+
 data = pd.read_csv(data_path, index_col=0, nrows=NROWS)
 
 locations = list(data.groupby('location').groups.keys())
@@ -74,41 +76,62 @@ embed = hub.Module("https://tfhub.dev/google/elmo/3")
 def ELMoEmbedding(x):
     return embed(tf.squeeze(tf.cast(x, tf.string)), signature="default", as_dict=True)["default"]
 
-def build_model(): 
+# def build_model(): 
+#     input_text = Input(shape=(1,), dtype="string")
+#     embedding = Lambda(ELMoEmbedding, output_shape=(1024, ))(input_text)
+#     dense = Dense(256, activation='relu', kernel_regularizer=keras.regularizers.l2(0.001))(embedding)
+#     pred = Dense(1, activation='sigmoid')(dense)
+#     model = Model(inputs=[input_text], outputs=pred)
+#     model.compile(loss='binary_crossentropy', optimizer='rmsprop', metrics=['accuracy'])
+#     return model
+
+def elmo_model():
     input_text = Input(shape=(1,), dtype="string")
     embedding = Lambda(ELMoEmbedding, output_shape=(1024, ))(input_text)
-    dense = Dense(256, activation='relu', kernel_regularizer=keras.regularizers.l2(0.001))(embedding)
+    model = Model(inputs=[input_text], outputs=embedding)
+    return model
+    
+def classifier_model():
+    input_embeddings = Input(shape=(1024,))
+    dense = Dense(256, activation='relu', kernel_regularizer=keras.regularizers.l2(0.001))(input_embeddings)
     pred = Dense(1, activation='sigmoid')(dense)
-    model = Model(inputs=[input_text], outputs=pred)
+    model = Model(inputs=[input_embeddings], outputs=pred)
     model.compile(loss='binary_crossentropy', optimizer='rmsprop', metrics=['accuracy'])
     return model
 
-
-model_elmo = build_model()
-print(model_elmo.summary())
+elmo = elmo_model()
 
 with tf.Session() as session:
     K.set_session(session)
     session.run(tf.global_variables_initializer())  
     session.run(tf.tables_initializer())
-    history = model_elmo.fit(X, y, epochs=EPOCHS, batch_size=BATCH_SIZE, validation_split=0.2)
-    model_elmo.save_weights('./model_elmo_weights.h5')
+    X_embedded = elmo.predict(X, batch_size=BATCH_SIZE, verbose=1)
 
-import matplotlib.pyplot as plt
+classifier = classifier_model()
+print(classifier.summary())
 
-acc = history.history['accuracy']
-val_acc = history.history['val_accuracy']
-loss = history.history['loss']
-val_loss = history.history['val_loss']
+with tf.Session() as session:
+    K.set_session(session)
+    session.run(tf.global_variables_initializer())  
+    session.run(tf.tables_initializer())
+    history = classifier.fit(X_embedded, y, epochs=EPOCHS, batch_size=1000, validation_split=0.2)
+    classifier.save_weights(model_weights_path)
 
-epochs = range(1, len(acc) + 1)
+# import matplotlib.pyplot as plt
 
-plt.plot(epochs, acc, 'g', label='Training Acc')
-plt.plot(epochs, val_acc, 'b', label='Validation Acc')
-plt.title('Training and validation Acc')
-plt.xlabel('Epochs')
-plt.ylabel('Acc')
-plt.legend()
+# acc = history.history['accuracy']
+# val_acc = history.history['val_accuracy']
+# loss = history.history['loss']
+# val_loss = history.history['val_loss']
+
+# epochs = range(1, len(acc) + 1)
+
+# plt.plot(epochs, acc, 'g', label='Training Acc')
+# plt.plot(epochs, val_acc, 'b', label='Validation Acc')
+# plt.title('Training and validation Acc')
+# plt.xlabel('Epochs')
+# plt.ylabel('Acc')
+# plt.legend()
 
 validation_path = os.path.join(directory_path, "data/validation_transcripts.csv")
 validation_data = pd.read_csv(validation_path, index_col=0)
@@ -122,13 +145,14 @@ with tf.Session() as session:
     K.set_session(session)
     session.run(tf.global_variables_initializer())  
     session.run(tf.tables_initializer())
-    model_elmo.load_weights('./model_elmo_weights.h5')
+    classifier.load_weights(model_weights_path)
 
     t = time.time()
     # predicts = model_elmo.predict(valid_X)
-    score = model_elmo.evaluate(valid_X, valid_y, verbose=0, batch_size=BATCH_SIZE)
+    valid_X_embedded = elmo.predict(valid_X, batch_size=BATCH_SIZE, verbose=1)
+    score = classifier.evaluate(valid_X_embedded, valid_y, batch_size=BATCH_SIZE)
     print("time: ", time.time() - t)
     print('valid score:', score[0]) 
     print('valid accuracy:', score[1])
 
-plt.show()
+# plt.show()

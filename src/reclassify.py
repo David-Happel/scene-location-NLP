@@ -7,9 +7,6 @@ import os
 import sys
 from clean_data import clean_data
 from collections import Counter
-import tensorflow.keras as keras
-from keras.layers import Input, Lambda, Dense
-from keras.models import Model
 from tensorflow.compat.v1.keras import backend as K
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import confusion_matrix
@@ -17,15 +14,22 @@ import time
 from datetime import datetime
 import logging
 import matplotlib.pyplot as plt
-from models import classifier_model, elmo_model
+from models import classifier_model, logistic_regression
+from helper import int_to_one_hot
+from sklearn.manifold import TSNE
+import seaborn as sns
 
 t = time.time()
 now = datetime.now()
 
+source_report = 'report-2020-05-12-18-36-10'
+
 script_path = os.path.abspath(__file__)  # path to python script
 directory_path = os.path.dirname(os.path.split(script_path)[0])  # path to python script dir
-data_path = os.path.join(directory_path, "data/parsed_transcripts.csv")
-report_dir = os.path.join(directory_path, 'reports', 'report-'+now.strftime("%Y-%m-%d-%H-%M-%S"))
+source_report_path = os.path.join(directory_path, 'reports', source_report)
+embeddings_path = os.path.join(source_report_path, 'embeddings.pkl')
+valid_embeddings_path = os.path.join(source_report_path, 'valid_embeddings.pkl')
+report_dir = os.path.join(source_report_path, 'reclassify_report-'+now.strftime("%Y-%m-%d-%H-%M-%S"))
 os.mkdir(report_dir)
 
 logging.basicConfig(filename=os.path.join(report_dir, 'log.log'), level=logging.DEBUG)
@@ -36,8 +40,8 @@ full_cmd_arguments = sys.argv
 # Keep all but the first
 argument_list = full_cmd_arguments[1:]
 
-short_options = "n:b:e:"
-long_options = ["nrows=", "batchsize=", "epochs="]
+short_options = "b:e:"
+long_options = ["batchsize=", "epochs="]
 
 try:
     arguments, values = getopt.getopt(argument_list, short_options, long_options)
@@ -46,20 +50,17 @@ except getopt.error as err:
     logging.error(str(err))
     sys.exit(2)
 
-NROWS = None
 BATCH_SIZE = 50
 EPOCHS = 3
 
 # Evaluate given options
 for current_argument, current_value in arguments:
-    if current_argument in ("-n", "--nrows"):
-        NROWS = int(current_value)
-    elif current_argument in ("-b", "--batchsize"):
+    if current_argument in ("-b", "--batchsize"):
         BATCH_SIZE = int(current_value)
     elif current_argument in ("-e", "--epochs"):
         EPOCHS = int(current_value)
 
-logging.info('starting with nrows: %s batchsize: %s epochs: %s', NROWS, BATCH_SIZE, EPOCHS)
+logging.info('starting with batchsize: %s epochs: %s', BATCH_SIZE, EPOCHS)
 
 # inspiration: https://github.com/sambit9238/Deep-Learning/blob/master/elmo_embedding_tfhub.ipynb
 # https://medium.com/@the1ju/simple-logistic-regression-using-keras-249e0cc9a970
@@ -70,36 +71,20 @@ mpl_logger = logging.getLogger('matplotlib')
 mpl_logger.setLevel(logging.WARNING)
 
 logging.info('Loading data... %s', time.time() - t)
-data = pd.read_csv(data_path, index_col=0, nrows=NROWS)
 
-
-locations = list(data.groupby('location').groups.keys())
-
-data.loc[data["location"]==locations[0],"location"]=0
-data.loc[data["location"]==locations[1],"location"]=1
-
-logging.info('Cleaning data... %s', time.time() - t)
-data = clean_data(data)
-X = np.array(data['clean_line'])
+data = pd.read_pickle(embeddings_path)
+X_embedded = np.array([np.array(x) for x in data['embedding']])
 y = np.array(data['location'])
 logging.debug(Counter(y))
 
-logging.info('Embedding data... %s', time.time() - t)
-
-elmo = elmo_model()
-with tf.Session() as session:
-    K.set_session(session)
-    session.run(tf.global_variables_initializer())  
-    session.run(tf.tables_initializer())
-    X_embedded = elmo.predict(X, batch_size=BATCH_SIZE, verbose=1)
-
-embeddings_path = os.path.join(report_dir, 'embeddings.pkl')
-data['embedding'] = X_embedded.tolist()
-data[['location', 'clean_line', 'embedding']].to_pickle(embeddings_path)
+print(X_embedded.shape)
 
 logging.info('Training classifier... %s', time.time() - t)
+
 classifier = classifier_model()
 classifier.summary(print_fn=logging.info)
+logging.info('loss_func %s', classifier.loss)
+logging.info('optimizer_func %s', classifier.optimizer)
 
 with tf.Session() as session:
     K.set_session(session)
@@ -128,23 +113,9 @@ plt.savefig(training_plot_path)
 
 logging.info('Validating model... %s', time.time() - t)
 
-validation_path = os.path.join(directory_path, "data/validation_transcripts.csv")
-validation_data = pd.read_csv(validation_path, index_col=0)
-validation_data.loc[validation_data["location"]==locations[0],"location"]=0
-validation_data.loc[validation_data["location"]==locations[1],"location"]=1
-validation_data = clean_data(validation_data)
-valid_X = np.array(validation_data['clean_line'])
+validation_data = pd.read_pickle(valid_embeddings_path)
+valid_X_embedded = np.array([np.array(x) for x in validation_data['embedding']])
 valid_y = np.array(validation_data['location'])
-
-with tf.Session() as session:
-    K.set_session(session)
-    session.run(tf.global_variables_initializer())  
-    session.run(tf.tables_initializer())
-    valid_X_embedded = elmo.predict(valid_X, batch_size=BATCH_SIZE, verbose=1)
-
-valid_embeddings_path = os.path.join(report_dir, 'valid_embeddings.pkl')
-validation_data['embedding'] = valid_X_embedded.tolist()
-validation_data[['location', 'clean_line', 'embedding']].to_pickle(valid_embeddings_path)
 
 with tf.Session() as session:
     K.set_session(session)
@@ -153,8 +124,26 @@ with tf.Session() as session:
     classifier.load_weights(model_weights_path)
 
     score = classifier.evaluate(valid_X_embedded, valid_y, batch_size=BATCH_SIZE)
-    
+    valid_pred = classifier.predict(valid_X_embedded, batch_size=BATCH_SIZE)
+
     logging.info('valid score: %s', score[0]) 
     logging.info('valid accuracy:%s', score[1])
+    logging.info(confusion_matrix(valid_y.tolist(), valid_pred[:,0].round().astype(int).tolist()))
 
 logging.info('Total time %s', time.time() - t)
+
+validation_data['prediction'] = valid_pred[:,0].round().astype(int).tolist()
+
+validation_data['correct'] = validation_data['location'] == validation_data['prediction']
+
+tsne30 = TSNE(random_state=42,n_iter=2000,metric='cosine',n_components=2, perplexity=30)
+
+embd_tr = tsne30.fit_transform(validation_data['embedding'].to_list())
+validation_data['ts_x_axis'] = embd_tr[:,0]
+validation_data['ts_y_axis'] = embd_tr[:,1]
+
+plt.figure()
+sns.scatterplot('ts_x_axis', 'ts_y_axis', hue='location', style='correct', size=1, data=validation_data[['location', 'ts_x_axis', 'ts_y_axis', 'correct']].sample(3000)).set_title('perp: 30')
+tsne_plot_path = os.path.join(report_dir, 'tsne.png')
+plt.savefig(tsne_plot_path)
+plt.show()

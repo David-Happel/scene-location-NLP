@@ -15,7 +15,7 @@ def clean_data(data, remove_punctuation=True, remove_numbers=True, lemmatize=Tru
         data['clean_line'] = lemmatization(data['clean_line'], nlp)
 
         if remove_pron:
-            data['clean_line'] = data['clean_line'].str.replace("-PRON-", "")
+            data['clean_line'] = data['clean_line'].str.replace("-PRON-", " ")
 
     data['clean_line'] = data['clean_line'].apply(lambda x: ' '.join(x.split()))
     data = data[data['clean_line'].str.count(' ') >= (minimum_words-1)]

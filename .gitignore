@@ -6,8 +6,9 @@ data/parsed_transcripts
 parsed_transcripts.csv
 data/embeddings
 data/word_counts
-_pycashe
-src/__pycache__
+*/__pycache__
 reports
 data/embeddings.pkl
 commands.txt
+jobs
+plots

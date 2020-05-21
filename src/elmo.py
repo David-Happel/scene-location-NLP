@@ -18,6 +18,7 @@ from datetime import datetime
 import logging
 import matplotlib.pyplot as plt
 from models import classifier_model, elmo_model
+from helper import balance_data_down
 
 t = time.time()
 now = datetime.now()
@@ -80,9 +81,17 @@ data.loc[data["location"]==locations[1],"location"]=1
 
 logging.info('Cleaning data... %s', time.time() - t)
 data = clean_data(data)
+
+logging.info('location counts')
+logging.info(data.location.value_counts())
+logging.info('Balancing data... %s', time.time() - t)
+data = balance_data_down(data)
+logging.info('location counts after balance')
+logging.info(data.location.value_counts())
+
 X = np.array(data['clean_line'])
 y = np.array(data['location'])
-logging.debug(Counter(y))
+
 
 logging.info('Embedding data... %s', time.time() - t)
 
@@ -133,6 +142,7 @@ validation_data = pd.read_csv(validation_path, index_col=0)
 validation_data.loc[validation_data["location"]==locations[0],"location"]=0
 validation_data.loc[validation_data["location"]==locations[1],"location"]=1
 validation_data = clean_data(validation_data)
+validation_data = balance_data_down(validation_data)
 valid_X = np.array(validation_data['clean_line'])
 valid_y = np.array(validation_data['location'])
 
@@ -150,7 +160,7 @@ with tf.Session() as session:
     K.set_session(session)
     session.run(tf.global_variables_initializer())  
     session.run(tf.tables_initializer())
-    classifier.load_weights(model_weights_path)
+    classifier.load_weights(model_weights_path, by_name=True)
 
     score = classifier.evaluate(valid_X_embedded, valid_y, batch_size=BATCH_SIZE)
     

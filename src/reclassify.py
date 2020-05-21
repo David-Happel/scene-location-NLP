@@ -22,7 +22,7 @@ import seaborn as sns
 t = time.time()
 now = datetime.now()
 
-source_report = 'report-2020-05-12-18-36-10'
+source_report = 'no_lemma_report'
 
 script_path = os.path.abspath(__file__)  # path to python script
 directory_path = os.path.dirname(os.path.split(script_path)[0])  # path to python script dir
@@ -81,7 +81,7 @@ print(X_embedded.shape)
 
 logging.info('Training classifier... %s', time.time() - t)
 
-classifier = classifier_model()
+classifier = logistic_regression(reg=0.001)
 classifier.summary(print_fn=logging.info)
 logging.info('loss_func %s', classifier.loss)
 logging.info('optimizer_func %s', classifier.optimizer)
@@ -121,7 +121,7 @@ with tf.Session() as session:
     K.set_session(session)
     session.run(tf.global_variables_initializer())  
     session.run(tf.tables_initializer())
-    classifier.load_weights(model_weights_path)
+    classifier.load_weights(model_weights_path, by_name=True)
 
     score = classifier.evaluate(valid_X_embedded, valid_y, batch_size=BATCH_SIZE)
     valid_pred = classifier.predict(valid_X_embedded, batch_size=BATCH_SIZE)
@@ -136,6 +136,9 @@ validation_data['prediction'] = valid_pred[:,0].round().astype(int).tolist()
 
 validation_data['correct'] = validation_data['location'] == validation_data['prediction']
 
+guesses_path = os.path.join(report_dir, 'guesses.pkl')
+validation_data.to_pickle(guesses_path)
+
 tsne30 = TSNE(random_state=42,n_iter=2000,metric='cosine',n_components=2, perplexity=30)
 
 embd_tr = tsne30.fit_transform(validation_data['embedding'].to_list())
@@ -146,4 +149,4 @@ plt.figure()
 sns.scatterplot('ts_x_axis', 'ts_y_axis', hue='location', style='correct', size=1, data=validation_data[['location', 'ts_x_axis', 'ts_y_axis', 'correct']].sample(3000)).set_title('perp: 30')
 tsne_plot_path = os.path.join(report_dir, 'tsne.png')
 plt.savefig(tsne_plot_path)
-plt.show()
+# plt.show()

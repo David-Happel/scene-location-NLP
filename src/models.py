@@ -13,14 +13,14 @@ def classifier_model(reg=0.001):
     model.compile(loss='binary_crossentropy', optimizer='rmsprop', metrics=['accuracy'])
     return model
 
-def logistic_regression():
+def logistic_regression(reg = 0.001):
     model = Sequential()
-    model.add(Dense(1, activation='sigmoid', kernel_regularizer=L1L2(l1=0.01, l2=0.01), input_dim=1024))
+    model.add(Dense(1, activation='sigmoid', kernel_regularizer=L1L2(l1=reg, l2=reg), input_dim=1024))
     model.compile(loss='binary_crossentropy', optimizer='rmsprop', metrics=['accuracy'])
     return model
 
 def ELMoEmbedding(x):
-    embed = hub.Module("https://tfhub.dev/google/elmo/3")
+    embed = hub.Module("https://tfhub.dev/google/elmo/3", trainable=True)
     return embed(tf.squeeze(tf.cast(x, tf.string)), signature="default", as_dict=True)["default"]
 
 def elmo_model():

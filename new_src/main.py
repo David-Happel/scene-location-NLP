@@ -1,24 +1,28 @@
 import pandas as pd
 import os
+import numpy as np
 from clean import clean
-from balance import balance_down
+from balance import balance_down, split
 from embed import elmo_embed, tfidf_vectorize
 from classify import classify
 from evaluate import evaluate
 from report import log, report_path
 
 config = {
-    "elmo": {
-        "batch_size": 50,
-        "logistic_regression_sklearn": {
-            "epochs": 100,
-            "reg": 0.001
-        }
-    },
+    # "elmo": {
+    #     "batch_size": 50,
+    #     "logistic_regression_sklearn": {
+    #         "grid_search": {"C": np.logspace(-4, 5, 10), 'max_iter': [100, 300, 500]},
+    #         'C': 1000,
+    #         'max_iter': 100
+    #     }
+    # },
     "tfidf": {
+        "stop_words": "english",
         "logistic_regression_sklearn": {
-            "epochs": 100,
-            "reg": 0.001
+            # "grid_search": {"C": np.logspace(-2, 4, 7), 'max_iter': [100, 300, 500, 1000]},
+            'C': 1000.0,
+            'max_iter': 100
         }
     }
 }
@@ -46,17 +50,22 @@ def main():
 
     log('cleaning data..')
     data = clean(data, cleaning_options)
-    data = balance_down(data)
+    train, test = split(data)
+    train = balance_down(train)
+    test = balance_down(test)
+    log("training size: " + str(len(train)))
+    log("testing size: " + str(len(test)))
 
     for technique, options in config.items():
         log('starting: ' + technique)
         if technique == "elmo":
-            embedded_data = elmo_embed(data, options)
+            embedded_train, embedded_test = elmo_embed(train, test, options)
 
         elif technique == 'tfidf':
-            embedded_data = tfidf_vectorize(data, options)
+            embedded_train, embedded_test = tfidf_vectorize(train, test, options)
+            log("tfidf feature length: " + str(embedded_train["embedding"].shape[1]))
 
-        train, test = classify(embedded_data, options)
+        train, test = classify(embedded_train, embedded_test, options)
         test = evaluate(test)
         test.to_pickle(report_path(technique + '_test_results.pkl'))
 

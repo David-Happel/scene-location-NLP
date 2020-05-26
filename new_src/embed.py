@@ -10,29 +10,35 @@ tf.get_logger().setLevel('INFO')
 tf.disable_eager_execution()
 
 
-def elmo_embed(data, options={'batch_size': 50}):
-    clean_lines = np.array(data['clean_line'])
+def elmo_embed(train, test, options={'batch_size': 50}):
+    train_clean_lines = np.array(train['clean_line'])
+    test_clean_lines = np.array(test['clean_line'])
 
     elmo = elmo_model()
     with tf.Session() as session:
         K.set_session(session)
         session.run(tf.global_variables_initializer())
         session.run(tf.tables_initializer())
-        embedded_lines = elmo.predict(
-            clean_lines, batch_size=options["batch_size"], verbose=1)
-    data["embedding"] = embedded_lines.tolist()
-    return data
+        train_embedded_lines = elmo.predict(
+            train_clean_lines, batch_size=options["batch_size"], verbose=1)
+        test_embedded_lines = elmo.predict(
+            test_clean_lines, batch_size=options["batch_size"], verbose=1)
+    train["embedding"] = train_embedded_lines.tolist()
+    test["embedding"] = test_embedded_lines.tolist()
+    return train, test
 
 
-def tfidf_vectorize(data, options={}):
-    tfidf = TfidfVectorizer()
-    data["embedding"] = tfidf.fit_transform(
-        data["clean_line"]).toarray().tolist()
-    return data
+def tfidf_vectorize(train, test, options={"stop_words": None}):
+    tfidf = TfidfVectorizer(stop_words=options["stop_words"])
+    train["embedding"] = tfidf.fit_transform(
+        train["clean_line"]).toarray().tolist()
+    test["embedding"] = tfidf.transform(
+        test["clean_line"]).toarray().tolist()
+    return train, test
 
 
 def ELMoEmbedding(x):
-    embed = hub.Module("https://tfhub.dev/google/elmo/3", trainable=True)
+    embed = hub.Module("https://tfhub.dev/google/elmo/3", trainable=False)
     return embed(tf.squeeze(tf.cast(x, tf.string)), signature="default", as_dict=True)["default"]
 
 

@@ -1,5 +1,6 @@
 from sklearn.utils import resample
 import pandas as pd
+from sklearn.model_selection import train_test_split
 
 
 def balance_down(data):
@@ -18,6 +19,9 @@ def balance_down(data):
                            random_state=42)  # reproducible results
 
     # Combine majority class with upsampled minority class
-    result = pd.concat([class_0, class_1]).sample(
-        frac=1, random_state=42).reset_index(drop=True)
+    result = pd.concat([class_0, class_1]).sample(frac=1, random_state=42).reset_index(drop=True)
     return result
+
+
+def split(data):
+    return train_test_split(data, test_size=0.2, random_state=42)

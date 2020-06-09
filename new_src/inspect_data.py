@@ -9,7 +9,7 @@ def inspect_data():
     script_path = os.path.abspath(__file__)  # path to python script
     directory_path = os.path.dirname(os.path.split(
         script_path)[0])  # path to python script dir
-    source_guesses_path = 'reports/report-2020-05-25-11-48-01/tfidf_test_results.pkl'
+    source_guesses_path = '/home/david/Projects/NLP-project/reports/report-2020-05-27-09-36-59/tfidf_test_results.pkl'
 
     data = pd.read_pickle(source_guesses_path)
 

@@ -1,10 +1,10 @@
-from tensorflow.compat.v1.keras import backend as K
-import tensorflow.compat.v1 as tf
 import numpy as np
-from keras.layers import Input, Lambda, Dense
-from keras.models import Model
+import tensorflow.compat.v1 as tf
 import tensorflow_hub as hub
+from keras.layers import Input, Lambda
+from keras.models import Model
 from sklearn.feature_extraction.text import TfidfVectorizer
+from tensorflow.compat.v1.keras import backend as K
 
 tf.get_logger().setLevel('INFO')
 tf.disable_eager_execution()

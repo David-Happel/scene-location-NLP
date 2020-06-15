@@ -1,12 +1,9 @@
-import codecs
 import os
 import re
 
-import numpy as np
 import pandas as pd
 import textdistance
 from bs4 import BeautifulSoup
-from sklearn.model_selection import train_test_split
 
 script_path = os.path.abspath(__file__)  # path to python script
 directory_path = os.path.dirname(os.path.split(

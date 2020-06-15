@@ -1,8 +1,9 @@
-import pandas as pd
 import os
-from sklearn.manifold import TSNE
-import seaborn as sns
+
 import matplotlib.pyplot as plt
+import pandas as pd
+import seaborn as sns
+from sklearn.manifold import TSNE
 
 
 def inspect_data():

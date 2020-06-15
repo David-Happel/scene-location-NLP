@@ -1,14 +1,14 @@
-from keras.regularizers import L1L2
 import numpy as np
+import pandas as pd
 import tensorflow.compat.v1 as tf
-from keras.layers import Input, Lambda, Dense
-from keras.models import Model, Sequential
-from tensorflow.compat.v1.keras import backend as K
+from keras.layers import Dense
+from keras.models import Sequential
+from keras.regularizers import L1L2
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import GridSearchCV
-from report import log, report_path
-import pandas as pd
+from tensorflow.compat.v1.keras import backend as K
 
+from report import log, report_path
 
 tf.get_logger().setLevel('INFO')
 

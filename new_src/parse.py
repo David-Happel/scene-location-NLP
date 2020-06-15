@@ -70,12 +70,12 @@ def parse():
                         parsed_loc = allowed_location(CURRENT_LOCATION)
                         if parsed and parsed_loc:
                             data.append(
-                                [filename, parsed_loc, parsed[0], parsed[1]])
+                                [filename, parsed_loc, parsed[0], parsed[1], CURRENT_LOCATION])
                     else:
                         current_line += line
 
     data = pd.DataFrame(
-        data, columns=['episode', 'location', 'character', 'line'])
+        data, columns=['episode', 'location', 'character', 'line', 'original_location'])
     parsed_path = os.path.join(directory_path, "data/parsed_transcripts.csv")
     data.to_csv(parsed_path)
 

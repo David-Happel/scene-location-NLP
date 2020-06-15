@@ -17,6 +17,7 @@ def classify(train, test, options, technique=''):
     train_embeddings = np.array([np.array(x) for x in train['embedding']])
     train_y = np.array(train['location_int'])
     test_embeddings = np.array([np.array(x) for x in test['embedding']])
+    coef = []
 
     if "logistic_regression_sklearn" in options:
         model_config = options["logistic_regression_sklearn"]
@@ -27,6 +28,7 @@ def classify(train, test, options, technique=''):
             lr_model = LogisticRegression(max_iter=model_config["max_iter"], C=model_config["C"])
 
         lr_model.fit(train_embeddings, train_y)
+        coef = lr_model.coef_[0, :]
 
         if "grid_search" in model_config:
             cv_results = pd.DataFrame(lr_model.cv_results_)
@@ -51,7 +53,7 @@ def classify(train, test, options, technique=''):
             test['pred'] = preds[:, 0]
             test['pred_int'] = test['pred'].round(0)
 
-    return train, test
+    return train, test, coef
 
 
 def logistic_regression_model(config={"reg": 0.001}, input_dim=1024):

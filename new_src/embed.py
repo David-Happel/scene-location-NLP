@@ -38,7 +38,9 @@ def tfidf_vectorize(train, test, options={"stop_words": None}):
         train["clean_line"]).toarray().tolist()
     test["embedding"] = tfidf.transform(
         test["clean_line"]).toarray().tolist()
-    return train, test
+
+    feature_names = tfidf.get_feature_names()
+    return train, test, feature_names
 
 
 def ELMoEmbedding(x):

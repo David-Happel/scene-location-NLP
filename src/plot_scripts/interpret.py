@@ -8,7 +8,7 @@ def interpret():
     script_path = os.path.abspath(__file__)  # path to python script
     directory_path = os.path.dirname(os.path.split(
         script_path)[0])  # path to python script dir
-    tfidf_path = '/home/david/Projects/NLP-project/reports/report-2020-06-09-10-51-14/tfidf_coefficients.pkl'
+    tfidf_path = '/home/david/Projects/NLP-project/reports/report-2020-06-17-16-40-01/tfidf_coefficients.pkl'
     elmo_path = '/home/david/Projects/NLP-project/reports/report-2020-06-09-11-27-37/elmo_coefficients.pkl'
 
     tfidf_coefficients = pd.read_pickle(tfidf_path).sort_values(by=['coef']).reset_index(drop=True).reset_index()
